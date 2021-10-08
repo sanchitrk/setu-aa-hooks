@@ -1,0 +1,25 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Build Image'
+    args:
+      - 'builds'
+      - 'submit'
+      - '--tag'
+      - 'asia-south1-docker.pkg.dev/$PROJECT_ID/setu-bridge-img-repo/setu-bridge:latest'
+  - name: 'gcr.io/cloud-builders/gcloud'
+    id: 'Set Env & Deploy Image'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |-
+        gcloud run deploy setu-bridge \
+        --image asia-south1-docker.pkg.dev/$PROJECT_ID/setu-bridge-img-repo/setu-bridge:latest \
+        --region asia-south1 \
+        --platform managed \
+        --allow-unauthenticated \
+        --set-env-vars MONGODB_PWD=$$MONGODB_PWD
+    secretEnv: ['MONGODB_PWD']
+availableSecrets:
+  secretManager:
+    - versionName: 'projects/serengeti-development/secrets/sunburstdev-db-pwd/versions/latest'
+      env: 'MONGODB_PWD'

@@ -14,6 +14,6 @@ if __name__ != "__main__":
     gunicorn_logger = logging.getLogger("gunicorn.error")
     app.logger.handlers = gunicorn_logger.handlers
     app.logger.setLevel(gunicorn_logger.level)
-    app.logger.info("setu peacemaker service started...")
+    app.logger.info("setu bridge service started...")
 else:
     app.run(debug=True, host="0.0.0.0", port=int(os.environ.get("PORT", 8080)))
