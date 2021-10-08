@@ -7,6 +7,7 @@ Flask==2.0.2
 google-api-core==2.1.0
 google-auth==2.3.0
 google-cloud-pubsub==2.8.0
+google-cloud-tasks==2.6.0
 googleapis-common-protos==1.53.0
 grpc-google-iam-v1==0.12.3
 grpcio==1.41.0
