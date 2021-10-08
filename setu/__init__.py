@@ -5,7 +5,7 @@ from flask import Flask, jsonify, request
 from google.cloud import pubsub_v1
 from pymongo import MongoClient
 
-from .config import MONGODB_HOST, MONGODB_NAME, MONGODB_PWD, MONGODB_USER
+from .config import MONGODB_HOST, MONGODB_NAME, MONGODB_PWD, MONGODB_USER, SETU_PEACEMAKER_BASE_URL
 
 publisher = pubsub_v1.PublisherClient()
 
@@ -19,6 +19,10 @@ MONGO_URL = f"mongodb+srv://{MONGODB_USER}:{MONGODB_PWD}@{MONGODB_HOST}/{MONGODB
 mongodb = MongoClient(MONGO_URL, connect=False)[MONGODB_NAME]
 
 app = Flask(__name__)
+
+URL_STEP_2 = f"{SETU_PEACEMAKER_BASE_URL}/-/2"
+URL_STEP_3 = f"{SETU_PEACEMAKER_BASE_URL}/-/3"
+URL_STEP_4 = f"{SETU_PEACEMAKER_BASE_URL}/-/4"
 
 
 @app.route("/")
@@ -66,6 +70,18 @@ def consent_notification():
         {"$set": update_fields},
     )
     print(f"updated collection aaSetuWorkflows matched count: {result.matched_count}")
+    #
+    #
+    payload = {"workflow_id": workflow_id}
+    payload = json.dumps(payload)
+    response = requests.request("POST", URL_STEP_2, data=payload)
+    print(response.text)
+    response = requests.request("POST", URL_STEP_3, data=payload)
+    print(response.text)
+    response = requests.request("POST", URL_STEP_4, data=payload)
+    print(response.text)
+    #
+    #
     return jsonify({"workflow_id": workflow_id})
 
 
