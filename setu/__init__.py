@@ -1,17 +1,24 @@
+import datetime
 import json
 
 import requests
 from flask import Flask, jsonify, request
-from google.cloud import pubsub_v1
+from google.cloud import pubsub_v1, tasks_v2
+from google.protobuf import timestamp_pb2
 from pymongo import MongoClient
 
 from .config import MONGODB_HOST, MONGODB_NAME, MONGODB_PWD, MONGODB_USER, SETU_PEACEMAKER_BASE_URL
 
 publisher = pubsub_v1.PublisherClient()
+task_client = tasks_v2.CloudTasksClient()
 
 
 PROJECT_ID = "serengeti-development"
 AA_FI_READY_TOPIC = "pub-aa-fi-ready"
+
+LOCATION_ID = "asia-south1"
+
+QUEUE = "aa-fiready-queue"
 
 MONGO_URL = f"mongodb+srv://{MONGODB_USER}:{MONGODB_PWD}@{MONGODB_HOST}/{MONGODB_NAME}?retryWrites=true&w=majority"
 
@@ -82,6 +89,40 @@ def consent_notification():
     print(response.text)
     #
     #
+    url = f"{SETU_PEACEMAKER_BASE_URL}/taskhandler"
+    task_http_payload = {"workflow_id": workflow_id}
+    in_seconds = 180
+
+    # if task_name is None - auto generated
+    # keeping task name as workflow id, also once invoked cannot use the same task_name
+    task_name = workflow_id
+    parent = task_client.queue_path(PROJECT_ID, LOCATION_ID, QUEUE)
+    task = {
+        "http_request": {  # Specify the type of request.
+            "http_method": tasks_v2.HttpMethod.POST,
+            "url": url,  # The full url path that the task will be sent to.
+        }
+    }
+    task["http_request"]["headers"] = {"Content-type": "application/json"}
+    converted_payload = task_http_payload.encode()
+    task["http_request"]["body"] = converted_payload
+
+    if in_seconds is not None:
+        # Convert "seconds from now" into an rfc3339 datetime string.
+        d = datetime.datetime.utcnow() + datetime.timedelta(seconds=in_seconds)
+
+        # Create Timestamp protobuf.
+        timestamp = timestamp_pb2.Timestamp()
+        timestamp.FromDatetime(d)
+
+        # Add the timestamp to the tasks.
+        task["schedule_time"] = timestamp
+
+    if task_name is not None:
+        # Add the name to tasks.
+        task["name"] = task_client.task_path(PROJECT_ID, LOCATION_ID, QUEUE, task_name)
+
+    response = task_client.create_task(request={"parent": parent, "task": task})
     return jsonify({"workflow_id": workflow_id})
 
 
