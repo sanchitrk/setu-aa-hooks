@@ -32,4 +32,4 @@ six==1.16.0
 typing-extensions==3.10.0.2
 typing-inspect==0.7.1
 urllib3==1.26.7
-Werkzeug==2.0.2
+Werkzeug==2.2.3
