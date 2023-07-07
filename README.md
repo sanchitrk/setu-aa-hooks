@@ -1,2 +1,2 @@
-# setu-bridge
-Setu Bridge - hooks to the Setu AA platform
+# setu-aa-hooks
+Setu AA hooks - hooks to the Setu AA platform
